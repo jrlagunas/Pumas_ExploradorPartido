@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pumas UNAM — Inteligencia Deportiva</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F3F4F2; --card:#FFFFFF; --paper-alt:#EEF0EC;
+    --ink:#12181E; --ink-soft:#4B5560; --ink-faint:#8B93A0;
+    --navy:#0C2A4E; --navy-soft:#294C74; --gold:#B9902E; --gold-soft:#E7D9AF;
+    --win:#2F6B4F; --loss:#9C3B34; --teal:#3C7A89; --purple:#7A5C9E;
+    --line:#DADDD6; --line-strong:#B9BEB6;
+    --turf-a:#3E7A50; --turf-b:#376E48; --turf-line:#FFFFFF;
+    --shadow: 0 1px 2px rgba(12,42,78,0.05), 0 10px 28px rgba(12,42,78,0.08);
+    --fnt: 'Helvetica Neue', Helvetica, Arial, 'Inter', sans-serif;
+    --fnt-mono: 'JetBrains Mono', 'Consolas', monospace;
+    /* Condensed sports-style display face — used for headlines, scoreline, tabs.
+       Body copy stays on --fnt (Helvetica) for readability and UNAM's own style guide. */
+    --fnt-display: 'Oswald', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{ margin:0; background:var(--paper); color:var(--ink); font-family:var(--fnt); -webkit-font-smoothing:antialiased; }
+  .doc{ max-width:1360px; margin:0 auto; border-left:1px solid var(--line); border-right:1px solid var(--line); background:var(--paper); }
+  .wrap{ padding:22px clamp(16px,3vw,42px) 54px; position:relative; }
+
+  .topbar{ background:var(--navy); color:#EDEFEF; padding:8px clamp(16px,3vw,42px); display:flex; justify-content:center; font-family:var(--fnt-mono); font-size:10px; letter-spacing:0.14em; font-weight:700;}
+
+  header{ display:flex; justify-content:space-between; align-items:center; padding:20px 0 16px; border-bottom:4px solid var(--navy); margin-bottom:18px; flex-wrap:wrap; gap:10px;}
+  .brandmark{ display:flex; align-items:center; gap:14px; }
+  .brandmark img.crest{ width:52px; height:auto; display:block; }
+  h1{ font-family:var(--fnt-display); font-weight:600; font-size:24px; margin:0; color:var(--navy); letter-spacing:0.01em; text-transform:uppercase; }
+  .eyebrow{ font-family:var(--fnt-display); font-size:11px; letter-spacing:0.16em; text-transform:uppercase; color:var(--gold); font-weight:600; margin-bottom:3px;}
+  .meta{ font-family:var(--fnt-mono); font-size:10.5px; color:var(--ink-faint); text-align:right; line-height:1.7;}
+  .meta b{ color:var(--navy-soft); }
+
+  .controls{ display:flex; flex-wrap:wrap; gap:10px 22px; align-items:center; margin-bottom:18px; }
+  .ctrl-group{ display:flex; align-items:center; gap:8px; }
+  .ctrl-label{ font-family:var(--fnt-mono); font-size:10px; text-transform:uppercase; letter-spacing:0.07em; color:var(--ink-faint); font-weight:700; margin-right:2px;}
+  .seg{ display:flex; background:var(--paper-alt); border:1px solid var(--line-strong); border-radius:2px; padding:2px; gap:2px; }
+  .seg button{ border:none; background:transparent; padding:7px 14px; border-radius:1px; cursor:pointer; font-family:var(--fnt-display); font-size:12px; letter-spacing:0.03em; text-transform:uppercase; font-weight:600; color:var(--ink-soft); transition:all .15s; }
+  .seg button.active{ background:var(--navy); color:#fff; box-shadow:var(--shadow); }
+  .seg button:hover:not(.active){ color:var(--navy); }
+  .seg.gold button.active{ background:var(--gold); color:#fff; }
+  .seg.mode button.active{ background:#20324a; color:#fff; }
+
+  .layout{ display:grid; grid-template-columns:1fr 280px; gap:18px; }
+  .layout.full{ grid-template-columns:1fr; }
+  .pitch-card{ background:var(--card); border:1px solid var(--line); border-radius:4px; box-shadow:var(--shadow); padding:20px; position:relative; }
+  .side-card{ background:var(--card); border:1px solid var(--line); border-radius:4px; box-shadow:var(--shadow); padding:16px; display:flex; flex-direction:column; gap:14px; height:fit-content; position:relative; }
+
+  .view-tabs{ display:flex; gap:4px; margin-bottom:2px; border-bottom:1px solid var(--line); flex-wrap:wrap; }
+  .view-tabs button{ border:none; background:none; padding:9px 14px; cursor:pointer; font-family:var(--fnt-display); font-size:12.5px; letter-spacing:0.03em; text-transform:uppercase; font-weight:600; color:var(--ink-faint); border-bottom:3px solid transparent; margin-bottom:-1px; }
+  .view-tabs button.active{ color:var(--navy); border-bottom-color:var(--gold); }
+
+  .view-caption{ font-size:12px; color:var(--ink-faint); margin:10px 0 4px; font-style:italic; }
+
+  .chip-row{ display:flex; flex-wrap:wrap; gap:7px; margin-bottom:12px; align-items:center; }
+  .chip-row .chip-hint{ font-family:var(--fnt-mono); font-size:9.5px; text-transform:uppercase; letter-spacing:0.06em; color:var(--ink-faint); margin-right:4px;}
+  .chip{ border:1px solid var(--line-strong); background:#fff; color:var(--ink-soft); font-family:var(--fnt); font-size:11.5px; font-weight:600; padding:5px 12px; border-radius:14px; cursor:pointer; transition:all .12s; }
+  .chip.on{ background:var(--navy); border-color:var(--navy); color:#fff; }
+  .chip:hover:not(.on){ border-color:var(--navy-soft); color:var(--navy); }
+
+  svg.pitch{ width:100%; height:auto; display:block; border-radius:2px; }
+
+  .player-banner{ display:none; align-items:center; gap:13px; padding:12px 16px; background:var(--paper-alt); border-radius:4px; margin-bottom:12px; }
+  .player-banner .avatar-wrap{ flex-shrink:0; }
+  .player-banner .pname{ font-family:var(--fnt); font-weight:800; font-size:17px; color:var(--navy); }
+  .player-banner .ppos{ font-family:var(--fnt-mono); font-size:10.5px; color:var(--ink-faint); text-transform:uppercase; letter-spacing:0.05em;}
+
+  .time-panel{ margin-top:14px; padding-top:14px; border-top:1px solid var(--line); }
+  .time-row{ display:flex; align-items:center; gap:14px; }
+  .play-btn{ width:36px; height:36px; border-radius:50%; border:none; background:var(--navy); color:#fff; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:14px; }
+  .play-btn:hover{ background:var(--navy-soft); }
+  .slider-wrap{ flex:1; position:relative; height:36px; }
+  .slider-track{ position:absolute; top:16px; left:0; right:0; height:4px; background:var(--line-strong); border-radius:2px;}
+  .slider-range{ position:absolute; top:16px; height:4px; background:var(--gold); border-radius:2px; }
+  input[type=range]{ position:absolute; top:0; width:100%; margin:0; appearance:none; background:transparent; pointer-events:none; height:36px; }
+  input[type=range]::-webkit-slider-thumb{ appearance:none; pointer-events:auto; width:18px; height:18px; border-radius:50%; background:var(--navy); border:3px solid #fff; box-shadow:0 1px 4px rgba(0,0,0,0.3); cursor:pointer; margin-top:9px; }
+  input[type=range]::-moz-range-thumb{ pointer-events:auto; width:18px; height:18px; border-radius:50%; background:var(--navy); border:3px solid #fff; box-shadow:0 1px 4px rgba(0,0,0,0.3); cursor:pointer; }
+  .time-readout{ font-family:var(--fnt-mono); font-size:13px; font-weight:700; color:var(--navy); width:96px; text-align:center; flex-shrink:0;}
+
+  .side-title{ font-family:var(--fnt-mono); font-size:10px; text-transform:uppercase; letter-spacing:0.07em; color:var(--ink-faint); font-weight:700;}
+  .roster-list{ display:flex; flex-direction:column; gap:2px; max-height:560px; overflow-y:auto; }
+  .roster-row{ display:flex; align-items:center; gap:9px; padding:6px 4px; border-radius:4px; cursor:default; }
+  .roster-row.clickable{ cursor:pointer; }
+  .roster-row.clickable:hover{ background:var(--paper-alt); }
+  .roster-row.selected{ background:var(--gold-soft); }
+  .roster-row .num{ width:24px; height:24px; border-radius:50%; background:var(--paper-alt); color:var(--navy); display:flex; align-items:center; justify-content:center; font-family:var(--fnt-mono); font-size:11px; font-weight:700; flex-shrink:0; }
+  .roster-row.selected .num{ background:var(--navy); color:#fff; }
+  .roster-row .nm{ font-size:12.5px; font-weight:600; color:var(--ink); flex:1; }
+  .roster-row .val{ font-family:var(--fnt-mono); font-size:12px; font-weight:700; color:var(--gold); }
+  .roster-row.dim{ opacity:0.35; }
+
+  .legend{ display:flex; flex-wrap:wrap; gap:8px 14px; }
+  .legend-item{ display:flex; align-items:center; gap:6px; font-size:11.5px; color:var(--ink-soft); }
+  .dot{ width:10px; height:10px; border-radius:50%; display:inline-block; flex-shrink:0; }
+  .dot.ring{ background:transparent; border:2px solid; }
+
+  .statsheet{ display:none; }
+  .statsheet.show{ display:block; }
+  .sheet-grid{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:0 26px; }
+  .sheet-group-title{ font-family:var(--fnt-mono); font-size:10px; text-transform:uppercase; letter-spacing:0.07em; color:var(--gold); font-weight:700; margin:16px 0 8px; border-bottom:1px solid var(--line); padding-bottom:6px;}
+  .sheet-row{ margin-bottom:9px; }
+  .sheet-row-top{ display:flex; justify-content:space-between; font-size:11.5px; margin-bottom:3px; }
+  .sheet-row-top .lbl{ color:var(--ink-soft); }
+  .sheet-row-top .v{ font-family:var(--fnt-mono); font-weight:700; color:var(--navy); }
+  .sheet-bar-track{ height:6px; background:var(--paper-alt); border-radius:3px; overflow:hidden; }
+  .sheet-bar-fill{ height:100%; background:var(--navy); border-radius:3px; }
+
+  .resumen{ display:none; }
+  .resumen.show{ display:block; }
+  .resumen-head{ display:flex; align-items:center; justify-content:center; gap:26px; padding:6px 0 26px; border-bottom:1px solid var(--line); margin-bottom:22px; }
+  .resumen-team{ display:flex; flex-direction:column; align-items:center; gap:6px; width:180px; }
+  .resumen-team .rt-name{ font-family:var(--fnt-display); font-weight:600; font-size:16px; color:var(--navy); text-align:center; text-transform:uppercase; letter-spacing:0.02em;}
+  .resumen-score{ font-family:var(--fnt-mono); font-size:22px; font-weight:800; color:var(--ink-faint); letter-spacing:0.02em; }
+  .resumen-cat-title{ font-family:var(--fnt-display); font-size:12px; text-transform:uppercase; letter-spacing:0.1em; color:var(--gold); font-weight:600; margin:26px 0 12px; border-bottom:2px solid var(--paper-alt); padding-bottom:6px;}
+  .resumen-cat-title:first-child{ margin-top:0; }
+  .rrow{ display:grid; grid-template-columns:1fr 220px 1fr; align-items:center; gap:10px; padding:5px 0; }
+  .rrow .rlabel{ text-align:center; font-size:11.5px; color:var(--ink-soft); font-weight:600; }
+  .rval{ font-family:var(--fnt-mono); font-weight:700; font-size:12.5px; width:38px; text-align:center; flex-shrink:0; }
+  .rval.p{ color:var(--navy); }
+  .rval.r{ color:var(--gold); }
+  .rside{ display:flex; align-items:center; gap:8px; }
+  .rside.left{ justify-content:flex-end; }
+  .rside.right{ justify-content:flex-start; }
+  .rbar-track{ flex:1; height:7px; background:var(--paper-alt); border-radius:4px; overflow:hidden; position:relative; }
+  .rbar-fill{ height:100%; position:absolute; top:0; border-radius:4px; }
+  .rbar-fill.p{ right:0; background:var(--navy); }
+  .rbar-fill.r{ left:0; background:var(--gold); }
+
+  .credit-tag{ position:absolute; bottom:8px; right:12px; font-family:var(--fnt-mono); font-size:8.5px; letter-spacing:0.03em; color:var(--ink-faint); opacity:0.55; pointer-events:none; user-select:none; white-space:nowrap; }
+
+  footer.colophon{ margin-top:26px; padding-top:14px; border-top:1px solid var(--line); display:flex; justify-content:space-between; font-family:var(--fnt-mono); font-size:10px; color:var(--ink-faint); flex-wrap:wrap; gap:6px;}
+
+  @media (max-width: 920px){ .layout{ grid-template-columns:1fr; } .sheet-grid{ grid-template-columns:1fr; } .rrow{ grid-template-columns:1fr 140px 1fr; } }
+</style>
+</head>
+<body>
+
+<div class="doc">
+  <div class="topbar"><span>PUMAS UNAM · INTELIGENCIA DEPORTIVA</span></div>
+  <div class="wrap">
+
+    <header>
+      <div class="brandmark">
+        <img class="crest" src="data:image/png;base64,__LOGO_B64__" alt="Pumas UNAM">
+        <div><div class="eyebrow">Inteligencia Deportiva</div><h1>Explorador de Partido</h1></div>
+      </div>
+      <div class="meta">FUENTE: OPTA MA2 / MA3 — SDAPI<br>GENERADO POR: <b>J. R. LAGUNAS PARRA</b></div>
+    </header>
+
+    <div class="controls">
+      <div class="ctrl-group">
+        <span class="ctrl-label">Partido</span>
+        <div class="seg" id="matchSeg"></div>
+      </div>
+      <div class="ctrl-group" id="teamCtrlGroup">
+        <span class="ctrl-label">Equipo</span>
+        <div class="seg gold" id="teamSeg"></div>
+      </div>
+      <div class="ctrl-group">
+        <span class="ctrl-label">Modo</span>
+        <div class="seg mode" id="modeSeg"></div>
+      </div>
+    </div>
+
+    <div class="layout" id="layoutGrid">
+      <div class="pitch-card">
+
+        <div class="resumen" id="resumenSheet"></div>
+
+        <div id="explorerBlock">
+          <div class="view-tabs" id="viewTabs"></div>
+          <div class="view-caption" id="viewCaption"></div>
+          <div class="chip-row" id="chipRow"></div>
+
+          <div class="player-banner" id="playerBanner">
+            <div class="avatar-wrap" id="pbAvatar"></div>
+            <div><div class="pname" id="pbName"></div><div class="ppos" id="pbPos"></div></div>
+          </div>
+
+          <svg class="pitch" id="pitchSvg" viewBox="0 0 100 65" preserveAspectRatio="xMidYMid meet"></svg>
+
+          <div class="statsheet" id="statSheet"></div>
+
+          <div class="time-panel" id="timePanel">
+            <div class="time-row">
+              <button class="play-btn" id="playBtn">▶</button>
+              <div class="slider-wrap">
+                <div class="slider-track"></div>
+                <div class="slider-range" id="sliderRange"></div>
+                <input type="range" id="minFrom" min="0" max="98" value="0">
+                <input type="range" id="minTo" min="0" max="98" value="98">
+              </div>
+              <div class="time-readout" id="timeReadout">0'–FIN</div>
+            </div>
+          </div>
+        </div>
+        <span class="credit-tag">J. R. Lagunas Parra · Pumas UNAM Inteligencia Deportiva</span>
+      </div>
+
+      <div class="side-card" id="sideCard">
+        <div>
+          <div class="side-title" id="sideTitle">PASES POR JUGADOR</div>
+          <div class="roster-list" id="rosterList"></div>
+        </div>
+        <div>
+          <div class="side-title" style="margin-bottom:8px;">LEYENDA</div>
+          <div class="legend" id="legendBox"></div>
+        </div>
+      </div>
+    </div>
+
+    <footer class="colophon">
+      <span>PUMAS UNAM · INTELIGENCIA DEPORTIVA</span>
+      <span>GENERADO POR JAIME RODRIGO LAGUNAS PARRA</span>
+      <span id="matchFooter"></span>
+    </footer>
+  </div>
+</div>
+
+<script id="data-events" type="application/json">__EVENTS_JSON__</script>
+<script id="data-fullstats" type="application/json">__FULLSTATS_JSON__</script>
+<script id="data-summary" type="application/json">__SUMMARY_JSON__</script>
+<script>
+// ============================================================
+// DATA MODEL (generic — works for any two teams, any number of matches)
+// DATA[matchId] = { label, teamOrder: [idA, idB], teams: { id: {name, roster, passes, shots, defActions} } }
+// FULLSTATS[matchId] = { teamId: { shirt: {...curated per-player stats} } }
+// SUMMARY[matchId] = { teamOrder, teamNames, categories: [{cat, rows:[{key,label,[teamId]:val,...}]}] }
+// ============================================================
+const DATA = JSON.parse(document.getElementById('data-events').textContent);
+const FULLSTATS = JSON.parse(document.getElementById('data-fullstats').textContent);
+const SUMMARY = JSON.parse(document.getElementById('data-summary').textContent);
+const MATCH_IDS = Object.keys(DATA);
+
+// The team highlighted/selected by default when a match loads, if present in that match.
+// Change this if you want a different "home" team to be the default focus.
+const TRACKED_TEAM_NAME = "Pumas UNAM";
+
+const NAVY='#0C2A4E', NAVY_SOFT='#294C74', GOLD='#B9902E', WIN='#2F6B4F', LOSS='#9C3B34', TEAL='#3C7A89', PURPLE='#7A5C9E';
+
+const STAT_GROUPS = [
+  { title:'Participación y pase', keys:[
+    ['minsPlayed','Minutos jugados'], ['touches','Toques de balón'],
+    ['totalPass','Pases intentados'], ['accuratePass','Pases completados'],
+    ['totalChippedPass','Pases elevados'], ['totalThroughBall','Pases al hueco'],
+    ['successfulFinalThirdPasses','Pases en último tercio'],
+  ]},
+  { title:'Producción ofensiva', keys:[
+    ['totalScoringAtt','Disparos totales'], ['ontargetScoringAtt','Disparos a puerta'],
+    ['penAreaEntries','Entradas al área'], ['progressiveCarries','Conducciones progresivas'],
+    ['wonContest','Regates ganados'], ['totalContest','Regates intentados'],
+  ]},
+  { title:'Fase defensiva', keys:[
+    ['duelWon','Duelos ganados'], ['duelLost','Duelos perdidos'], ['aerialWon','Duelos aéreos ganados'],
+    ['ballRecovery','Recuperaciones'], ['interceptionWon','Intercepciones'],
+    ['totalTackle','Entradas intentadas'], ['wonTackle','Entradas ganadas'],
+    ['effectiveClearance','Despejes'], ['fkFoulWon','Faltas recibidas'], ['fkFoulLost','Faltas cometidas'],
+  ]},
+];
+
+const CHIP_CONFIG = {
+  network: { mode:'single', options:[['all','Posición: todos los pases'],['completed','Posición: solo completados']], default:['all'] },
+  zones:   { mode:'multi',  options:[['pass','Pases'],['def','Duelos y recuperaciones'],['shot','Disparos']], default:['pass','def','shot'] },
+  pzones:  { mode:'multi',  options:[['pass','Pases'],['def','Duelos y recuperaciones'],['shot','Disparos']], default:['pass','def','shot'] },
+  shots:   { mode:'multi',  options:[['goal','Gol'],['saved','Atajado'],['post','Poste'],['miss','Fuera']], default:['goal','saved','post','miss'] },
+  pshots:  { mode:'multi',  options:[['goal','Gol'],['saved','Atajado'],['post','Poste'],['miss','Fuera']], default:['goal','saved','post','miss'] },
+  defense: { mode:'multi',  options:[['recov','Recuperaciones (burbujas)'],['duel','Duelos ganados/perdidos (puntos)']], default:['recov','duel'] },
+  pdefense:{ mode:'multi',  options:[['recov','Recuperaciones (burbujas)'],['duel','Duelos ganados/perdidos (puntos)']], default:['recov','duel'] },
+  pmap:    { mode:'multi',  options:[['ok','Completados'],['bad','Fallidos']], default:['ok','bad'] },
+};
+const chipState = {};
+
+const VIEW_CAPTIONS = {
+  network: 'Posición promedio de cada jugador y volumen de conexiones entre ellos.',
+  zones: 'Densidad de acciones por zona del campo.',
+  shots: 'Ubicación y resultado de cada disparo.',
+  defense: 'Zonas de recuperación de balón y resultado de los duelos.',
+  pmap: 'Cada pase individual del jugador, con su resultado.',
+  pzones: 'Zonas de mayor actividad del jugador.',
+  pshots: 'Disparos del jugador seleccionado.',
+  pdefense: 'Recuperaciones y duelos del jugador seleccionado.',
+  ficha: 'Cada métrica comparada contra el máximo del equipo en ese partido.',
+};
+
+function pickDefaultTeam(matchId){
+  const m = DATA[matchId];
+  const found = m.teamOrder.find(id => m.teams[id].name === TRACKED_TEAM_NAME);
+  return found || m.teamOrder[0];
+}
+
+const state = { jornada: MATCH_IDS[0], team: pickDefaultTeam(MATCH_IDS[0]), mode:'resumen', view: 'network', player: null, minFrom: 0, minTo: 98, playing:false, playTimer:null };
+
+const SVGNS = 'http://www.w3.org/2000/svg';
+function el(tag, attrs){ const e=document.createElementNS(SVGNS,tag); for(const k in attrs) e.setAttribute(k, attrs[k]); return e; }
+function titled(node, text){ const t = el('title',{}); t.textContent = text; node.appendChild(t); return node; }
+
+// ==================== PITCH ====================
+function drawPitchBase(svg){
+  svg.innerHTML='';
+  const W=100,H=65;
+  const stripes = 10;
+  for(let i=0;i<stripes;i++){
+    svg.appendChild(el('rect',{x:(W/stripes)*i, y:0, width:W/stripes, height:H, fill: i%2===0?'var(--turf-a)':'var(--turf-b)'}));
+  }
+  svg.appendChild(el('rect',{x:0,y:0,width:W,height:H,fill:'none',stroke:'var(--turf-line)','stroke-width':0.6}));
+
+  const defsRoot = el('defs',{});
+  const shadow = el('filter',{id:'dropShadow', x:'-60%', y:'-60%', width:'220%', height:'220%'});
+  shadow.appendChild(el('feDropShadow',{dx:0, dy:0.35, stdDeviation:0.45, 'flood-color':'#00131f', 'flood-opacity':0.35}));
+  defsRoot.appendChild(shadow);
+  svg.appendChild(defsRoot);
+
+  const dynamicLayer = el('g',{id:'dynamicLayer'});
+  svg.appendChild(dynamicLayer);
+
+  const lg = el('g',{stroke:'var(--turf-line)', 'stroke-width':0.45, fill:'none', opacity:0.95});
+  lg.appendChild(el('rect',{x:1,y:1,width:W-2,height:H-2}));
+  lg.appendChild(el('line',{x1:W/2,y1:1,x2:W/2,y2:H-1}));
+  lg.appendChild(el('circle',{cx:W/2,cy:H/2,r:8.7}));
+  lg.appendChild(el('circle',{cx:W/2,cy:H/2,r:0.55,fill:'var(--turf-line)',stroke:'none'}));
+  lg.appendChild(el('rect',{x:1,y:H/2-19.27,width:15.7,height:38.55}));
+  lg.appendChild(el('rect',{x:W-16.7,y:H/2-19.27,width:15.7,height:38.55}));
+  lg.appendChild(el('rect',{x:1,y:H/2-8.76,width:5.24,height:17.52}));
+  lg.appendChild(el('rect',{x:W-6.24,y:H/2-8.76,width:5.24,height:17.52}));
+  lg.appendChild(el('circle',{cx:11.48,cy:H/2,r:0.5,fill:'var(--turf-line)',stroke:'none'}));
+  lg.appendChild(el('circle',{cx:W-11.48,cy:H/2,r:0.5,fill:'var(--turf-line)',stroke:'none'}));
+
+  const clipL = el('clipPath',{id:'clipD_L'}); clipL.appendChild(el('rect',{x:16.7,y:0,width:W-16.7,height:H}));
+  const clipR = el('clipPath',{id:'clipD_R'}); clipR.appendChild(el('rect',{x:0,y:0,width:W-16.7,height:H}));
+  const defs = el('defs',{}); defs.appendChild(clipL); defs.appendChild(clipR);
+  lg.appendChild(defs);
+  lg.appendChild(el('circle',{cx:11.48,cy:H/2,r:8.7,'clip-path':'url(#clipD_L)'}));
+  lg.appendChild(el('circle',{cx:W-11.48,cy:H/2,r:8.7,'clip-path':'url(#clipD_R)'}));
+
+  [[1,1],[W-1,1],[1,H-1],[W-1,H-1]].forEach(([cx,cy])=>{
+    lg.appendChild(el('circle',{cx,cy,r:1.1}));
+  });
+
+  lg.appendChild(el('rect',{x:-0.9,y:H/2-3.6,width:0.9,height:7.2,fill:'none'}));
+  lg.appendChild(el('rect',{x:W,y:H/2-3.6,width:0.9,height:7.2,fill:'none'}));
+
+  svg.appendChild(lg);
+
+  const arrow = el('text',{x:W-2,y:3.6,'font-size':2.6, fill:'#ffffff', opacity:0.85, 'text-anchor':'end','font-family':'var(--fnt-mono)','font-weight':700});
+  arrow.textContent='ATAQUE →';
+  svg.appendChild(arrow);
+
+  const markerDefs = el('defs',{});
+  const m1 = el('marker',{id:'arrowGreen', viewBox:'0 0 10 10', refX:8, refY:5, markerWidth:3.2, markerHeight:3.2, orient:'auto-start-reverse'});
+  m1.appendChild(el('path',{d:'M0,0 L10,5 L0,10 z', fill:'#DFF3E3'}));
+  const m2 = el('marker',{id:'arrowRed', viewBox:'0 0 10 10', refX:8, refY:5, markerWidth:3.2, markerHeight:3.2, orient:'auto-start-reverse'});
+  m2.appendChild(el('path',{d:'M0,0 L10,5 L0,10 z', fill:'#F4D9D6'}));
+  markerDefs.appendChild(m1); markerDefs.appendChild(m2);
+  svg.appendChild(markerDefs);
+
+  return dynamicLayer;
+}
+function px(x){ return x; }
+// NOTE: Opta's y-axis runs opposite to on-screen "right flank" when attacking left→right,
+// so we flip it here — without this, right-sided players render on the left and vice versa.
+function py(y){ return 65 - (y/100)*65; }
+
+// ==================== FILTER HELPERS ====================
+function inWindow(m){ return m>=state.minFrom && m<=state.minTo; }
+function currentTeamData(){ return DATA[state.jornada].teams[state.team]; }
+function sameShirt(a,b){ return a!==null && a!==undefined && b!==null && b!==undefined && String(a)===String(b); }
+
+function roleOf(td, shirt){
+  const meta = td.roster[shirt];
+  if(!meta) return 'starter';
+  if(meta.pos === 'Goalkeeper') return 'gk';
+  if(meta.pos === 'Substitute') return 'sub';
+  return 'starter';
+}
+function roleStyle(role){
+  if(role==='gk') return { fill:'#B9902E', stroke:'#fff', dash:null, shape:'square' };
+  if(role==='sub') return { fill:'#0C2A4E', stroke:'#fff', dash:'1.1,1.1', shape:'circle', fadeOpacity:0.62 };
+  return { fill:'#0C2A4E', stroke:'#fff', dash:null, shape:'circle' };
+}
+
+// ==================== AVATAR (stylised silhouette — no licensed player photos available) ====================
+function avatarSVG(role, size){
+  size = size || 46;
+  const bg = role==='gk' ? GOLD : NAVY;
+  const op = role==='sub' ? 0.6 : 1;
+  return `<svg class="avatar-svg" width="${size}" height="${size}" viewBox="0 0 100 100">
+    <circle cx="50" cy="50" r="48" fill="${bg}" opacity="${op}"/>
+    <circle cx="50" cy="40" r="17" fill="#fff" opacity="0.92"/>
+    <path d="M18,92 C18,66 34,58 50,58 C66,58 82,66 82,92 Z" fill="#fff" opacity="0.92"/>
+    <circle cx="50" cy="50" r="48" fill="none" stroke="#fff" stroke-width="2"/>
+  </svg>`;
+}
+
+function separateNodes(nodeArr, iterations){
+  iterations = iterations || 220;
+  const pad = 0.5;
+  for(let it=0; it<iterations; it++){
+    let moved=false;
+    for(let i=0;i<nodeArr.length;i++){
+      for(let j=i+1;j<nodeArr.length;j++){
+        const A=nodeArr[i], B=nodeArr[j];
+        let dx = B.rx-A.rx, dy = B.ry-A.ry;
+        let dist = Math.sqrt(dx*dx+dy*dy);
+        const minDist = A.r + B.r + pad;
+        if(dist < minDist){
+          moved = true;
+          if(dist < 0.001){ dx = (Math.random()-0.5); dy = (Math.random()-0.5); dist = Math.sqrt(dx*dx+dy*dy)||0.01; }
+          const overlap = (minDist - dist) / 2;
+          const ux = dx/dist, uy = dy/dist;
+          A.rx -= ux*overlap; A.ry -= uy*overlap;
+          B.rx += ux*overlap; B.ry += uy*overlap;
+          A.rx = Math.min(96, Math.max(4, A.rx)); B.rx = Math.min(96, Math.max(4, B.rx));
+          A.ry = Math.min(61, Math.max(4, A.ry)); B.ry = Math.min(61, Math.max(4, B.ry));
+        }
+      }
+    }
+    if(!moved) break;
+  }
+}
+
+function activeChips(view){
+  return chipState[view] || (CHIP_CONFIG[view] ? CHIP_CONFIG[view].default.slice() : []);
+}
+
+// ==================== TEAM VIEWS ====================
+function renderNetwork(layer, td){
+  const chips = activeChips('network');
+  const onlyCompleted = chips.includes('completed');
+  const passesAll = td.passes.filter(p=>inWindow(p.m));
+  const posBasis = onlyCompleted ? passesAll.filter(p=>p.o===1) : passesAll;
+
+  const posSum = {}, posCount = {}, edgeCount = {};
+  posBasis.forEach(p=>{
+    if(!p.p) return;
+    posSum[p.p] = posSum[p.p] || [0,0]; posSum[p.p][0]+=p.x; posSum[p.p][1]+=p.y;
+    posCount[p.p] = (posCount[p.p]||0)+1;
+  });
+  passesAll.forEach(p=>{
+    if(p.o===1 && p.p && p.r){
+      const key = [p.p,p.r].sort((a,b)=>a-b).join('-');
+      edgeCount[key] = (edgeCount[key]||0)+1;
+    }
+  });
+  const maxN = Math.max(1, ...Object.values(posCount));
+  const maxEdge = Math.max(1, ...Object.values(edgeCount));
+
+  const nodeArr = Object.keys(posCount).map(shirt=>{
+    const x = posSum[shirt][0]/posCount[shirt], y = posSum[shirt][1]/posCount[shirt];
+    const n = posCount[shirt];
+    return { shirt, rx: px(x), ry: py(y), r: 2.2 + (n/maxN)*2.6, n };
+  });
+  separateNodes(nodeArr);
+  const nodeMap = {};
+  nodeArr.forEach(nd=>{ nodeMap[nd.shirt] = nd; });
+
+  Object.entries(edgeCount).forEach(([key,cnt])=>{
+    const [a,b] = key.split('-');
+    if(!nodeMap[a] || !nodeMap[b]) return;
+    const w = 0.3 + (cnt/maxEdge)*2.2;
+    const line = el('line',{ x1:nodeMap[a].rx, y1:nodeMap[a].ry, x2:nodeMap[b].rx, y2:nodeMap[b].ry,
+      stroke:'#0C2A4E', 'stroke-width':w, opacity:0.35+(cnt/maxEdge)*0.35, 'stroke-linecap':'round' });
+    const na = td.roster[a], nb = td.roster[b];
+    titled(line, `${na?na.name:a} ↔ ${nb?nb.name:b}: ${cnt} pase(s)`);
+    layer.appendChild(line);
+  });
+  nodeArr.forEach(nd=>{
+    const role = roleOf(td, nd.shirt);
+    const style = roleStyle(role);
+    const meta = td.roster[nd.shirt];
+    let shape;
+    if(style.shape==='square'){
+      const s = nd.r*1.7;
+      shape = el('rect',{x:nd.rx-s/2, y:nd.ry-s/2, width:s, height:s, rx:0.8, fill:style.fill, stroke:style.stroke,'stroke-width':0.5, filter:'url(#dropShadow)'});
+    } else {
+      shape = el('circle',{cx:nd.rx, cy:nd.ry, r:nd.r, fill:style.fill, stroke:style.stroke,'stroke-width':0.5, filter:'url(#dropShadow)'});
+      if(style.dash){ shape.setAttribute('stroke-dasharray', style.dash); shape.setAttribute('fill-opacity', style.fadeOpacity); shape.setAttribute('stroke-width', 0.7); }
+    }
+    titled(shape, `${meta?meta.name:nd.shirt} — ${nd.n} pase(s)`);
+    layer.appendChild(shape);
+    const t = el('text',{x:nd.rx, y:nd.ry+1.1, 'text-anchor':'middle', 'font-size':2.7, fill:'#fff','font-family':'var(--fnt-mono)','font-weight':700, 'pointer-events':'none'});
+    t.textContent = nd.shirt; layer.appendChild(t);
+  });
+  const metric = {}; nodeArr.forEach(nd=>{ metric[nd.shirt] = { n: nd.n }; });
+  return { type:'network', metric, label:'Pases' };
+}
+
+function zonePoints(td, filterShirt, view){
+  const chips = activeChips(view || 'zones');
+  let pts = [];
+  if(chips.includes('pass')) pts = pts.concat(td.passes.filter(p=>inWindow(p.m) && (!filterShirt || sameShirt(p.p,filterShirt))).map(p=>({x:p.x,y:p.y})));
+  if(chips.includes('def')) pts = pts.concat(td.defActions.filter(d=>inWindow(d.m) && (!filterShirt || sameShirt(d.p,filterShirt))).map(d=>({x:d.x,y:d.y})));
+  if(chips.includes('shot')) pts = pts.concat(td.shots.filter(s=>inWindow(s.m) && (!filterShirt || sameShirt(s.p,filterShirt))).map(s=>({x:s.x,y:s.y})));
+  return pts;
+}
+function renderZones(layer, pts){
+  const COLS=6, ROWS=5;
+  const grid = Array.from({length:ROWS},()=>Array(COLS).fill(0));
+  pts.forEach(p=>{
+    let cx = Math.min(COLS-1, Math.max(0,Math.floor(p.x/100*COLS)));
+    let cy = Math.min(ROWS-1, Math.max(0,Math.floor(p.y/100*ROWS)));
+    grid[cy][cx]++;
+  });
+  const max = Math.max(1, ...grid.flat());
+  const cw = 100/COLS, ch = 65/ROWS;
+  for(let r=0;r<ROWS;r++){
+    for(let c=0;c<COLS;c++){
+      const v = grid[r][c];
+      const t = v/max;
+      if(v>0){
+        const ry = (ROWS-1-r)*ch;
+        const rect = el('rect',{x:c*cw, y:ry, width:cw, height:ch, fill:mixColor(t), 'fill-opacity':0.35+t*0.45, stroke:'#fff','stroke-width':0.12});
+        titled(rect, `${v} acción(es) en esta zona`);
+        layer.appendChild(rect);
+        const txt = el('text',{x:c*cw+cw/2, y:ry+ch/2+1, 'text-anchor':'middle', 'font-size':3.6, fill:'#ffffff', 'font-family':'var(--fnt-mono)','font-weight':700, style:'paint-order:stroke;stroke:rgba(12,42,78,0.55);stroke-width:0.9px;', 'pointer-events':'none'});
+        txt.textContent = v; layer.appendChild(txt);
+      }
+    }
+  }
+}
+function mixColor(t){
+  const c1=[210,225,90], c2=[12,42,78];
+  const r=Math.round(c1[0]+(c2[0]-c1[0])*t), g=Math.round(c1[1]+(c2[1]-c1[1])*t), b=Math.round(c1[2]+(c2[2]-c1[2])*t);
+  return `rgb(${r},${g},${b})`;
+}
+
+function renderShots(layer, shots, view, td){
+  const chips = activeChips(view || 'shots');
+  const colors = { goal:GOLD, saved:'#EAF0FF', post:'#EDEFEF', miss:'#EDEFEF' };
+  const resEs = { goal:'Gol', saved:'Atajado', post:'Poste', miss:'Fuera' };
+  shots.filter(s=>chips.includes(s.res)).forEach(s=>{
+    const r = s.res==='goal' ? 2.7 : 2.0;
+    const c = el('circle',{cx:px(s.x), cy:py(s.y), r, fill: s.res==='miss'||s.res==='post'? 'none':colors[s.res], stroke: colors[s.res], 'stroke-width': (s.res==='miss'||s.res==='post')?0.45:0, opacity:0.95, filter:'url(#dropShadow)'});
+    const meta = td && td.roster[s.p];
+    titled(c, `${meta?meta.name:(s.p||'—')} · min ${s.m} · ${resEs[s.res]||s.res}`);
+    layer.appendChild(c);
+  });
+}
+
+// ==================== DUELOS Y RECUPERACIONES ====================
+const RECOVERY_TYPES = ['recovery','interception','clearance'];
+const DUEL_TYPES = ['tackle','aerial','dispossessed'];
+const DUEL_TYPE_ES = { tackle:'Entrada', aerial:'Duelo aéreo', dispossessed:'Pérdida por presión' };
+
+function renderDuelosRecuperaciones(layer, defs, view, td){
+  const chips = activeChips(view || 'defense');
+  if(chips.includes('recov')){
+    const pts = defs.filter(d=>RECOVERY_TYPES.includes(d.t)).map(d=>({x:d.x,y:d.y}));
+    renderRecoveryBubbles(layer, pts);
+  }
+  if(chips.includes('duel')){
+    const duels = defs.filter(d=>DUEL_TYPES.includes(d.t));
+    duels.forEach(d=>{
+      const won = d.t==='dispossessed' ? false : d.o===1;
+      const color = won ? WIN : LOSS;
+      const c = el('circle',{cx:px(d.x), cy:py(d.y), r:1.6, fill:color, stroke:'#fff','stroke-width':0.35, opacity:0.92});
+      const meta = td && td.roster[d.p];
+      titled(c, `${meta?meta.name:(d.p||'—')} · min ${d.m} · ${DUEL_TYPE_ES[d.t]||d.t} · ${won?'ganado':'perdido'}`);
+      layer.appendChild(c);
+    });
+  }
+}
+function renderRecoveryBubbles(layer, pts){
+  const COLS=5, ROWS=4;
+  const grid = Array.from({length:ROWS},()=>Array(COLS).fill(0));
+  pts.forEach(p=>{
+    let cx = Math.min(COLS-1, Math.max(0,Math.floor(p.x/100*COLS)));
+    let cy = Math.min(ROWS-1, Math.max(0,Math.floor(p.y/100*ROWS)));
+    grid[cy][cx]++;
+  });
+  const max = Math.max(1, ...grid.flat());
+  const cw = 100/COLS, ch = 65/ROWS;
+  for(let r=0;r<ROWS;r++){
+    for(let c=0;c<COLS;c++){
+      const v = grid[r][c];
+      if(v===0) continue;
+      const ry = (ROWS-1-r)*ch;
+      const cxp = c*cw+cw/2, cyp = ry+ch/2;
+      const rad = 1.6 + (v/max)*5.2;
+      const bubble = el('circle',{cx:cxp, cy:cyp, r:rad, fill:NAVY, opacity:0.28+(v/max)*0.32, stroke:NAVY,'stroke-width':0.3});
+      titled(bubble, `${v} recuperación(es) en esta zona`);
+      layer.appendChild(bubble);
+      const txt = el('text',{x:cxp, y:cyp+1.1, 'text-anchor':'middle', 'font-size':3.2, fill:'#fff','font-family':'var(--fnt-mono)','font-weight':700, 'pointer-events':'none'});
+      txt.textContent = v;
+      layer.appendChild(txt);
+    }
+  }
+}
+
+// ==================== PLAYER VIEWS ====================
+function renderPlayerPassMap(layer, td, shirt){
+  const chips = activeChips('pmap');
+  const passes = td.passes.filter(p=>inWindow(p.m) && sameShirt(p.p,shirt) && p.ex!==null)
+    .filter(p=> (p.o===1 && chips.includes('ok')) || (p.o!==1 && chips.includes('bad')) );
+  passes.forEach(p=>{
+    const ok = p.o===1;
+    const line = el('line',{ x1:px(p.x), y1:py(p.y), x2:px(p.ex), y2:py(p.ey),
+      stroke: ok? '#DFF3E3':'#F4D9D6', 'stroke-width':0.55, opacity:0.85,
+      'marker-end': ok? 'url(#arrowGreen)':'url(#arrowRed)' });
+    titled(line, `min ${p.m} · ${ok?'completado':'fallido'}`);
+    layer.appendChild(line);
+  });
+  passes.forEach(p=>{
+    layer.appendChild(el('circle',{cx:px(p.x), cy:py(p.y), r:0.9, fill:'#0C2A4E', stroke:'#fff','stroke-width':0.25}));
+  });
+}
+
+// ==================== RESUMEN (team stats sheet) ====================
+function renderResumen(){
+  const jornada = state.jornada;
+  const match = SUMMARY[jornada];
+  const teams = DATA[jornada].teams;
+  const sheet = document.getElementById('resumenSheet');
+  const [idA, idB] = match.teamOrder;
+
+  let html = `<div class="resumen-head">
+    <div class="resumen-team"><div class="rt-name">${match.teamNames[idA]}</div></div>
+    <div class="resumen-score">vs</div>
+    <div class="resumen-team"><div class="rt-name">${match.teamNames[idB]}</div></div>
+  </div>`;
+
+  match.categories.forEach(cat=>{
+    html += `<div class="resumen-cat-title">${catEs(cat.cat)}</div>`;
+    cat.rows.forEach(row=>{
+      const va = row[idA] || 0, vb = row[idB] || 0;
+      const maxv = Math.max(va, vb, 1);
+      const pPct = Math.min(100, (va/maxv)*100);
+      const rPct = Math.min(100, (vb/maxv)*100);
+      html += `<div class="rrow">
+        <div class="rside left"><span class="rval p">${va}</span><div class="rbar-track"><div class="rbar-fill p" style="width:${pPct}%;"></div></div></div>
+        <div class="rlabel">${row.label}</div>
+        <div class="rside right"><div class="rbar-track"><div class="rbar-fill r" style="width:${rPct}%;"></div></div><span class="rval r">${vb}</span></div>
+      </div>`;
+    });
+  });
+  sheet.innerHTML = html;
+}
+function catEs(c){
+  const map = { 'Posesion y pase':'Posesión y pase', 'Produccion ofensiva':'Producción ofensiva',
+    'Fase defensiva':'Fase defensiva', 'Duelos':'Duelos', 'Disciplina':'Disciplina', 'Portero':'Portero' };
+  return map[c] || c;
+}
+
+// ==================== MAIN RENDER ====================
+const svgEl = document.getElementById('pitchSvg');
+const TEAM_VIEWS = [['network','Red de pases'],['zones','Campograma'],['shots','Disparos'],['defense','Duelos y recuperaciones']];
+const PLAYER_VIEWS = [['pmap','Mapa de pases'],['pzones','Heatmap individual'],['pshots','Disparos'],['pdefense','Duelos y recuperaciones'],['ficha','Ficha completa']];
+
+function render(){
+  syncActive('matchSeg', state.jornada);
+  syncActive('teamSeg', state.team);
+  syncActive('modeSeg', state.mode);
+
+  const isResumen = state.mode==='resumen';
+  document.getElementById('layoutGrid').classList.toggle('full', isResumen);
+  document.getElementById('sideCard').style.display = isResumen ? 'none':'flex';
+  document.getElementById('explorerBlock').style.display = isResumen ? 'none':'block';
+  document.getElementById('resumenSheet').classList.toggle('show', isResumen);
+  document.getElementById('teamCtrlGroup').style.display = isResumen ? 'none':'flex';
+
+  const teamNames = MATCH_IDS.length ? DATA[state.jornada].teams : {};
+  document.getElementById('matchFooter').textContent = DATA[state.jornada].label;
+
+  if(isResumen){ renderResumen(); return; }
+
+  syncActive('viewTabs', state.view);
+  document.getElementById('viewCaption').textContent = VIEW_CAPTIONS[state.view] || '';
+  renderChipRow();
+
+  const td = currentTeamData();
+  const isPlayerMode = state.mode==='jugador';
+  document.getElementById('playerBanner').style.display = isPlayerMode ? 'flex':'none';
+  document.getElementById('timePanel').style.display = state.view==='ficha' ? 'none':'block';
+  document.getElementById('statSheet').classList.toggle('show', state.view==='ficha');
+  svgEl.style.display = state.view==='ficha' ? 'none':'block';
+
+  if(isPlayerMode && state.player){
+    const meta = td.roster[state.player];
+    const role = roleOf(td, state.player);
+    document.getElementById('pbAvatar').innerHTML = avatarSVG(role, 46);
+    document.getElementById('pbName').textContent = meta ? meta.name : '';
+    document.getElementById('pbPos').textContent = meta ? posEs(meta.pos) : '';
+  }
+
+  let result = null;
+  if(state.view!=='ficha'){
+    const layer = drawPitchBase(svgEl);
+    if(!isPlayerMode){
+      if(state.view==='network') result = renderNetwork(layer, td);
+      else if(state.view==='zones') renderZones(layer, zonePoints(td, null, 'zones'));
+      else if(state.view==='shots'){ const s = td.shots.filter(x=>inWindow(x.m)); renderShots(layer, s, 'shots', td); result={type:'list', metric: countBy(s.filter(x=>activeChips('shots').includes(x.res)),'p'), label:'Disparos'}; }
+      else if(state.view==='defense'){ const d = td.defActions.filter(x=>inWindow(x.m)); renderDuelosRecuperaciones(layer, d, 'defense', td); result={type:'list', metric: countBy(d,'p'), label:'Acciones def.'}; }
+    } else if(state.player){
+      if(state.view==='pmap') renderPlayerPassMap(layer, td, state.player);
+      else if(state.view==='pzones') renderZones(layer, zonePoints(td, state.player, 'pzones'));
+      else if(state.view==='pshots') renderShots(layer, td.shots.filter(s=>inWindow(s.m) && sameShirt(s.p,state.player)), 'pshots', td);
+      else if(state.view==='pdefense') renderDuelosRecuperaciones(layer, td.defActions.filter(d=>inWindow(d.m) && sameShirt(d.p,state.player)), 'pdefense', td);
+    }
+  } else if(isPlayerMode && state.player){
+    renderStatSheet(td);
+  }
+
+  renderRoster(td, result);
+  renderLegend();
+  updateTimeReadout();
+}
+
+function renderChipRow(){
+  const row = document.getElementById('chipRow');
+  const cfg = CHIP_CONFIG[state.view];
+  row.innerHTML='';
+  if(!cfg){ row.style.display='none'; return; }
+  row.style.display='flex';
+  const hint = document.createElement('span'); hint.className='chip-hint'; hint.textContent='Graficar:';
+  row.appendChild(hint);
+  const active = activeChips(state.view);
+  cfg.options.forEach(([key,label])=>{
+    const b = document.createElement('button');
+    b.className = 'chip' + (active.includes(key) ? ' on':'');
+    b.textContent = label;
+    b.onclick = ()=>{
+      let cur = activeChips(state.view).slice();
+      if(cfg.mode==='single'){ cur = [key]; }
+      else {
+        if(cur.includes(key)){ if(cur.length>1) cur = cur.filter(k=>k!==key); }
+        else { cur.push(key); }
+      }
+      chipState[state.view] = cur;
+      render();
+    };
+    row.appendChild(b);
+  });
+}
+
+function countBy(arr, key){ const o={}; arr.forEach(x=>{ if(x[key]) o[x[key]]=(o[x[key]]||0)+1; }); return o; }
+function posEs(p){
+  const map = {'Goalkeeper':'Portero','Defender':'Defensa','Defensive Midfielder':'Mediocampo defensivo','Attacking Midfielder':'Mediocampo ofensivo','Midfielder':'Mediocampo','Striker':'Delantero','Wing Back':'Carrilero','Substitute':'Suplente'};
+  return map[p] || p;
+}
+
+function renderStatSheet(td){
+  const sheet = document.getElementById('statSheet');
+  const shirt = state.player;
+  const teamFull = (FULLSTATS[state.jornada] && FULLSTATS[state.jornada][state.team]) || {};
+  const row = teamFull[shirt] || {};
+  let html = '<div class="sheet-grid">';
+  STAT_GROUPS.forEach(g=>{
+    html += `<div><div class="sheet-group-title">${g.title}</div>`;
+    g.keys.forEach(([k,label])=>{
+      const v = row[k] || 0;
+      let max = 1;
+      Object.values(teamFull).forEach(r=>{ if(r[k]>max) max = r[k]; });
+      const pct = Math.max(3, Math.round((v/max)*100));
+      html += `<div class="sheet-row"><div class="sheet-row-top"><span class="lbl">${label}</span><span class="v">${v}</span></div><div class="sheet-bar-track"><div class="sheet-bar-fill" style="width:${pct}%;"></div></div></div>`;
+    });
+    html += `</div>`;
+  });
+  html += '</div>';
+  sheet.innerHTML = html;
+}
+
+function renderRoster(td, result){
+  const list = document.getElementById('rosterList');
+  const title = document.getElementById('sideTitle');
+  list.innerHTML='';
+  const isPlayerMode = state.mode==='jugador';
+  let metric = {}, label='Pases';
+  if(result && result.metric && result.type!=='network'){ metric = result.metric; label = result.label; }
+  else if(result && result.type==='network'){ metric = result.metric; label='Pases'; }
+  else { td.passes.filter(p=>inWindow(p.m)).forEach(p=>{ if(p.p) metric[p.p] = (metric[p.p]||0)+1; }); label='Pases'; }
+
+  title.textContent = isPlayerMode ? 'SELECCIONA JUGADOR' : (label.toUpperCase() + ' POR JUGADOR');
+
+  const roster = td.roster;
+  const shirts = Object.keys(roster);
+  shirts.sort((a,b)=>{
+    const va = (result && result.type==='network') ? (metric[a]?metric[a].n:0) : (metric[a]||0);
+    const vb = (result && result.type==='network') ? (metric[b]?metric[b].n:0) : (metric[b]||0);
+    return vb - va;
+  });
+  shirts.forEach(shirt=>{
+    const raw = metric[shirt];
+    const v = (result && result.type==='network') ? (raw?raw.n:0) : (raw||0);
+    const role = roleOf(td, shirt);
+    const roleTag = role==='gk' ? '<span style="font-family:var(--fnt-mono);font-size:9px;font-weight:700;color:#B9902E;margin-left:4px;">POR</span>'
+                    : role==='sub' ? '<span style="font-family:var(--fnt-mono);font-size:9px;font-weight:700;color:#8B93A0;margin-left:4px;">SUP</span>' : '';
+    const row = document.createElement('div');
+    row.className = 'roster-row' + (isPlayerMode?' clickable':'') + (!isPlayerMode && v===0 ? ' dim':'') + (isPlayerMode && state.player===shirt ? ' selected':'');
+    row.innerHTML = `<span class="num">${shirt}</span><span class="nm">${roster[shirt].name}${roleTag}</span><span class="val">${isPlayerMode? '' : (v||'')}</span>`;
+    if(isPlayerMode){ row.onclick = ()=>{ state.player = shirt; render(); }; }
+    list.appendChild(row);
+  });
+}
+
+function renderLegend(){
+  const box = document.getElementById('legendBox');
+  box.innerHTML='';
+  let items = [];
+  const v = state.view;
+  if(v==='network'){ items=[
+      {c:NAVY,l:'Titular · tamaño = volumen de pases'},
+      {c:NAVY,l:'Suplente (borde punteado)', dashed:true},
+      {c:GOLD,l:'Portero (cuadro)', square:true},
+    ]; }
+  else if(v==='zones'||v==='pzones'){ items=[{c:'linear',l:'Densidad de acciones (claro → oscuro)'}]; }
+  else if(v==='shots'||v==='pshots'){ items=[{c:GOLD,l:'Gol'},{c:'#EAF0FF',l:'Atajado'},{c:'#EDEFEF',l:'Poste / Fuera',ring:true}]; }
+  else if(v==='defense'||v==='pdefense'){ items=[
+      {c:NAVY,l:'Burbuja = volumen de recuperaciones por zona'},
+      {c:WIN,l:'Duelo ganado'}, {c:LOSS,l:'Duelo perdido'},
+    ]; }
+  else if(v==='pmap'){ items=[{c:'#DFF3E3',l:'Pase completado'},{c:'#F4D9D6',l:'Pase fallido'}]; }
+  else if(v==='ficha'){ items=[{c:NAVY,l:'Barra = valor relativo al máximo del equipo en ese partido'}]; }
+  items.forEach(it=>{
+    const d = document.createElement('div'); d.className='legend-item';
+    if(it.c==='linear'){ d.innerHTML = `<span style="width:44px;height:10px;border-radius:3px;background:linear-gradient(90deg,${mixColor(0)},${mixColor(1)});display:inline-block;"></span>${it.l}`; }
+    else if(it.square){ d.innerHTML = `<span style="width:10px;height:10px;border-radius:2px;background:${it.c};display:inline-block;flex-shrink:0;"></span>${it.l}`; }
+    else if(it.dashed){ d.innerHTML = `<span class="dot" style="background:${it.c};opacity:0.6;border:1.5px dashed #fff;"></span>${it.l}`; }
+    else { d.innerHTML = `<span class="dot${it.ring?' ring':''}" style="${it.ring?'border-color:'+it.c:'background:'+it.c}"></span>${it.l}`; }
+    box.appendChild(d);
+  });
+}
+
+function updateTimeReadout(){
+  const t = document.getElementById('timeReadout');
+  const to = state.minTo>=98 ? 'FIN' : state.minTo+"'";
+  t.textContent = `${state.minFrom}'–${to}`;
+  const range = document.getElementById('sliderRange');
+  const pctA = (state.minFrom/98)*100, pctB = (state.minTo/98)*100;
+  range.style.left = pctA+'%'; range.style.width = (pctB-pctA)+'%';
+}
+
+// ==================== CONTROLS ====================
+function buildSeg(container, options, activeVal, onSelect){
+  container.innerHTML='';
+  options.forEach(opt=>{
+    const b = document.createElement('button');
+    b.textContent = opt.label;
+    b.dataset.value = opt.value;
+    if(opt.value===activeVal) b.classList.add('active');
+    b.onclick = ()=>{ onSelect(opt.value); };
+    container.appendChild(b);
+  });
+}
+function syncActive(containerId, activeVal){
+  const c = document.getElementById(containerId);
+  if(!c) return;
+  [...c.children].forEach(b=>{ b.classList.toggle('active', b.dataset.value===String(activeVal)); });
+}
+
+function autoSelectPlayer(td){
+  const counts = {};
+  td.passes.forEach(p=>{ if(p.p) counts[p.p]=(counts[p.p]||0)+1; });
+  let best=null, bestN=-1;
+  Object.entries(counts).forEach(([s,n])=>{ if(n>bestN){bestN=n; best=s;} });
+  return best || Object.keys(td.roster)[0];
+}
+
+function setupViewTabs(){
+  const views = state.mode==='equipo' ? TEAM_VIEWS : PLAYER_VIEWS;
+  const validValues = views.map(v=>v[0]);
+  if(!validValues.includes(state.view)) state.view = views[0][0];
+  buildSeg(document.getElementById('viewTabs'), views.map(v=>({value:v[0],label:v[1]})), state.view, v=>{ state.view=v; render(); });
+  document.getElementById('viewTabs').className='view-tabs';
+}
+
+function setupControls(){
+  buildSeg(document.getElementById('matchSeg'), MATCH_IDS.map(j=>({value:j, label:DATA[j].label})), state.jornada, v=>{
+    state.jornada=v;
+    state.team = pickDefaultTeam(v);
+    refreshTeamSeg();
+    if(state.mode==='jugador') state.player = autoSelectPlayer(currentTeamData());
+    render();
+  });
+  refreshTeamSeg();
+  buildSeg(document.getElementById('modeSeg'), [{value:'resumen',label:'Resumen'},{value:'equipo',label:'Equipo'},{value:'jugador',label:'Jugador'}], state.mode, v=>{
+    state.mode=v;
+    if(v==='jugador' && !state.player) state.player = autoSelectPlayer(currentTeamData());
+    if(v!=='resumen') setupViewTabs();
+    render();
+  });
+  setupViewTabs();
+}
+function refreshTeamSeg(){
+  const m = DATA[state.jornada];
+  buildSeg(document.getElementById('teamSeg'), m.teamOrder.map(id=>({value:id, label:m.teams[id].name})), state.team, v=>{
+    state.team=v;
+    if(state.mode==='jugador') state.player = autoSelectPlayer(currentTeamData());
+    render();
+  });
+}
+
+document.getElementById('minFrom').addEventListener('input', e=>{ state.minFrom = Math.min(+e.target.value, state.minTo); render(); });
+document.getElementById('minTo').addEventListener('input', e=>{ state.minTo = Math.max(+e.target.value, state.minFrom); render(); });
+
+document.getElementById('playBtn').addEventListener('click', ()=>{
+  const btn = document.getElementById('playBtn');
+  if(state.playing){ clearInterval(state.playTimer); state.playing=false; btn.textContent='▶'; return; }
+  state.playing=true; btn.textContent='❚❚';
+  const windowSize = 12;
+  state.minFrom = 0; state.minTo = windowSize;
+  document.getElementById('minFrom').value = state.minFrom; document.getElementById('minTo').value = state.minTo;
+  render();
+  state.playTimer = setInterval(()=>{
+    state.minFrom += 4; state.minTo = Math.min(98, state.minFrom + windowSize);
+    if(state.minFrom > 98){
+      clearInterval(state.playTimer); state.playing=false; btn.textContent='▶';
+      state.minFrom=0; state.minTo=98;
+      document.getElementById('minFrom').value=0; document.getElementById('minTo').value=98;
+      render(); return;
+    }
+    document.getElementById('minFrom').value = state.minFrom; document.getElementById('minTo').value = state.minTo;
+    render();
+  }, 1400);
+});
+
+setupControls();
+render();
+</script>
+</body>
+</html>
