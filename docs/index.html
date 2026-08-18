@@ -153,6 +153,10 @@
     </header>
 
     <div class="controls">
+      <div class="ctrl-group" id="catCtrlGroup">
+        <span class="ctrl-label">Categoría</span>
+        <div class="seg" id="catSeg"></div>
+      </div>
       <div class="ctrl-group">
         <span class="ctrl-label">Partido</span>
         <div class="seg" id="matchSeg"></div>
@@ -289,11 +293,20 @@ const VIEW_CAPTIONS = {
 
 function pickDefaultTeam(matchId){
   const m = DATA[matchId];
-  const found = m.teamOrder.find(id => m.teams[id].name === TRACKED_TEAM_NAME);
+  // substring match so it works across categories too: "Pumas UNAM U21", "Pumas UNAM Femenil", etc.
+  const found = m.teamOrder.find(id => m.teams[id].name.includes(TRACKED_TEAM_NAME));
   return found || m.teamOrder[0];
 }
 
-const state = { jornada: MATCH_IDS[0], team: pickDefaultTeam(MATCH_IDS[0]), mode:'resumen', view: 'network', player: null, minFrom: 0, minTo: 98, playing:false, playTimer:null };
+const state = { category: null, jornada: MATCH_IDS[0], team: pickDefaultTeam(MATCH_IDS[0]), mode:'resumen', view: 'network', player: null, minFrom: 0, minTo: 98, playing:false, playTimer:null };
+
+function allCategories(){
+  const set = new Set(MATCH_IDS.map(id => DATA[id].competition || 'Otros'));
+  return [...set];
+}
+function matchesInCategory(cat){
+  return MATCH_IDS.filter(id => (DATA[id].competition || 'Otros') === cat);
+}
 
 const SVGNS = 'http://www.w3.org/2000/svg';
 function el(tag, attrs){ const e=document.createElementNS(SVGNS,tag); for(const k in attrs) e.setAttribute(k, attrs[k]); return e; }
@@ -651,6 +664,7 @@ const TEAM_VIEWS = [['network','Red de pases'],['zones','Campograma'],['shots','
 const PLAYER_VIEWS = [['pmap','Mapa de pases'],['pzones','Heatmap individual'],['pshots','Disparos'],['pdefense','Duelos y recuperaciones'],['ficha','Ficha completa']];
 
 function render(){
+  syncActive('catSeg', state.category);
   syncActive('matchSeg', state.jornada);
   syncActive('teamSeg', state.team);
   syncActive('modeSeg', state.mode);
@@ -867,14 +881,35 @@ function setupViewTabs(){
   document.getElementById('viewTabs').className='view-tabs';
 }
 
-function setupControls(){
-  buildSeg(document.getElementById('matchSeg'), MATCH_IDS.map(j=>({value:j, label:DATA[j].label})), state.jornada, v=>{
+function refreshMatchSeg(){
+  const ids = matchesInCategory(state.category);
+  if(!ids.includes(state.jornada)) state.jornada = ids[0];
+  buildSeg(document.getElementById('matchSeg'), ids.map(j=>({
+    value:j,
+    label: DATA[j].label.replace(DATA[j].competition + ' · ', '')
+  })), state.jornada, v=>{
     state.jornada=v;
     state.team = pickDefaultTeam(v);
     refreshTeamSeg();
     if(state.mode==='jugador') state.player = autoSelectPlayer(currentTeamData());
     render();
   });
+}
+
+function setupControls(){
+  const cats = allCategories();
+  state.category = state.category || (DATA[state.jornada] ? (DATA[state.jornada].competition || cats[0]) : cats[0]);
+  document.getElementById('catCtrlGroup').style.display = cats.length > 1 ? 'flex' : 'none';
+  buildSeg(document.getElementById('catSeg'), cats.map(c=>({value:c, label:c})), state.category, v=>{
+    state.category = v;
+    refreshMatchSeg();
+    state.team = pickDefaultTeam(state.jornada);
+    refreshTeamSeg();
+    if(state.mode==='jugador') state.player = autoSelectPlayer(currentTeamData());
+    render();
+  });
+
+  refreshMatchSeg();
   refreshTeamSeg();
   buildSeg(document.getElementById('modeSeg'), [{value:'resumen',label:'Resumen'},{value:'equipo',label:'Equipo'},{value:'jugador',label:'Jugador'}], state.mode, v=>{
     state.mode=v;
